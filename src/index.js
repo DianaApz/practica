@@ -1,80 +1,101 @@
-#!/usr/bin/env node
-//get files()
-const [,, ...args] = process.argv;
 const path=require('path');
-const fs=require('fs')
-// let dir=process.cwd();
-
+const fs = require("fs");
 
 const changeAbs=(insertPath)=>{
     if(path.isAbsolute(insertPath)){
+        console.log('es abs');
         return insertPath;
-    } else {
-        const pathAbs= path.resolve(insertPath);
+    }
+    else {
+        let pathAbs = path.resolve(insertPath);
+        console.log('es relat');
+        console.log(pathAbs);
         return pathAbs
     }
 }
-const fileOrDir=(insertPath)=>{
-    const change= changeAbs(insertPath);
+
+
+
+const readDir = (dir,ext)=> {
+        
+    let results = [];
+      
+        // leer dir
+        fs.readdir(dir, (err, files) => {
+          files.forEach((file)=>{
+              // Obtener  path absolute
+              let filePath = path.resolve(dir, file);
+      
+             //si es  directory o file
+             
+             fs.lstat(filePath, (err, stat) =>{
+                 //  directory
+                 if (stat.isDirectory()) {
+                    readDir(filePath, ext)
+                    // results = results.concat(readDire(filePath, ext));
+                    // console.log(results);
+                    // return results
+                    }
+      
+                 // file push 
+                  if (stat.isFile() && filePath.endsWith(ext)) {
+                     results.push(filePath);
+                     console.log(results);
+                    //  return results
+                     
+                    }
+                });
+            })
+       });
+    // console.log(results);
+    return results
+};
+ 
+      
+const readFile =(filemd)=>{
+    fs.readFile(filemd, 'utf8', function(err, contents) {
+        console.log(contents);
+        if (err) {
+            //       return console.log(err);
+        }
+    });
+}
+const directoryFile=(change)=> new Promise((resolve,reject)=>{
+
     fs.lstat(change, (err, stats) =>{
         if (err) {
-            throw("Error");
+            console.log("Error");
         } else if(stats.isDirectory()){
-            console.log('es carpeta')
-            // const answer=readDir(change);
+            // console.log("carpeta");
+            // fs.readdir(change, (err, files) => {
+                // console.log(files);
+               let answer=readDir(change,'.md');
+            //    console.log(answer);
+            // });
+            
+            
         } else if(stats.isFile()){
-           const ext=path.extname(change);
-            // if(ext==='.md'){
-                console.log('es archivo')
+           console.log("archivo");
+           let ext=path.extname(change);
+            if(ext==='.md'){
+              console.log('si es md');
               readFile(change);
-            // }
+            }else{
+              console.log('no es md')
+            }
         }
-   });
+    });
+    
+})
+
+
+const mdlinks=(insertPath)=>{
+    let change= changeAbs(insertPath);
+    
+   
 }
 
 
-const marked=require('marked');
-const readFile =(filemd)=>{
-    // console.log(filemd)
-    // fs.readlink(filemd,(err, content)=>{
-        
-    //     console.log(content);
-
-    // })
-    let hrefobj=[{
-        href:null,
-        text:null
-    }];
-    fs.readFile(filemd,(err, content)=> {
-        // let exre='https?://';
-       
-        let contentString=content.toString();
-        // console.log(text);
-        let tokens = marked.lexer(contentString);
-        // console.log(tokens);
-        const html=marked.parser(tokens);
-        var urlRegex =/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        let arrlink =html.match(urlRegex);
-        arrlink.forEach((e)=>{
-            hrefobj.href+=e;
-
-        })
-    //     let textTag = html.match(/(<a href="([^"]+)">([^<]+)<\/a>)/g).map((val)=>{
-    //       return val.replace(/<a([^>]*?)href\s*=\s*(['"])([^\2]*?)\2\1*>/i,''); 
-    //    });
-    //    let arText = textTag.map((val)=>{
-    //      return val.replace(/<\/?a>/,''); 
-    //    });
-    //    arText.forEach((el)=>{
-    //        hrefobj.text+=el;
-    //    })
-    //     console.log(hrefobj);
-
-        
-    });
-};
+mdlinks('\track-project-1\lim20181-Track-FE-markdown-list\files');
 
 
-
-let answer=fileOrDir(args[0]);
-// console.log(answer);
